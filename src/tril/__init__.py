@@ -3,7 +3,7 @@ from typing import Callable
 
 from omegaconf import DictConfig
 
-
+# @wraps(func) retains the metadata of the original func
 def tril_run(func: Callable):
     @wraps(func)
     def decorator(cfg: DictConfig):

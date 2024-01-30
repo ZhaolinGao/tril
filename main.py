@@ -23,7 +23,15 @@ from tril import tril_run
 from tril.algorithms import AlgorithmRegistry
 from tril.logging import Tracker
 
+'''
+@hydra.main(version_base=None, config_path="cfgs", config_name="config")
+hydra config file: cfgs/config.yaml
+running main.py task=imdb alg=ppo woule replace task and alg in config.
+the input to main (cfg) contains all the info in config+task+alg.
 
+@tril_run
+decorator: main(cfg) becomes tril_run(main)
+'''
 @hydra.main(version_base=None, config_path="cfgs", config_name="config")
 @tril_run
 def main(cfg: DictConfig):
@@ -43,17 +51,17 @@ def main(cfg: DictConfig):
 
     save_path = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     tracker = Tracker(
-        save_path,
-        OmegaConf.to_container(cfg, resolve=True),
-        cfg.project_name,
-        cfg.experiment_name,
-        cfg.entity_name,
-        cfg.log_to_wandb,
-        log_level=logging.INFO,
-        is_main_process=accelerator.is_main_process,
+        save_path, # outputs/${experiment_name}/${now:%Y-%m-%d_%H-%M-%S}
+        OmegaConf.to_container(cfg, resolve=True), # convert cfg to dict
+        cfg.project_name, # TRIL
+        cfg.experiment_name, # tril_experiment
+        cfg.entity_name, # null
+        cfg.log_to_wandb, # false
+        log_level=logging.INFO, # log general info about the progress
+        is_main_process=accelerator.is_main_process, # bool for do something once
     )
 
-    # Initialize
+    # Initialize algorithm
     try:
         alg_cls = AlgorithmRegistry.get(cfg.alg.id)
     except:
